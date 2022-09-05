@@ -9,7 +9,7 @@ protocol Parkable {
 
 // Estructura del vehiculo y sus propiedades
 struct Parking {
-    var vehicles: Set<Vehicle> = []
+    private (set) var vehicles: Set<Vehicle> = []
     let maxVehicle = 20
     var acumVehicles = 0
     var earnings = 0
@@ -20,27 +20,27 @@ struct Parking {
         guard vehicles.count < maxVehicle, vehicles.insert(vehicle).inserted  else {
             return onFinish(false)
         }
-        return onFinish(true)
+        onFinish(true)
     }
     
     // Funcion para hacer el checkOut del vehiculo
     mutating func checkOutVehicle(_ plate: String, onSuccess: (Int) -> Void, onError: () -> Void ) {
         
-        let vehicle = (vehicles.first{ $0.plate.contains(plate) })
-        guard vehicle != nil else {
+//        let vehicle = (vehicles.first{ $0.plate.contains(plate) })
+        guard let vehicle = (vehicles.first{ $0.plate.contains(plate) }) else {
             return onError()
         }
         
-        vehicles.remove(vehicle!)
+        vehicles.remove(vehicle)
         
-        let parkedTimeInMinutes = parkedTimeToMinutes(vehicle!.checkInTime)
-        let hasDiscount = vehicle?.discountCard != nil
-        let priceToPay = calculatePriceToPay(parkedTimeInMinutes, vehicleType: vehicle!.type, hasDiscount: hasDiscount)
+        let parkedTimeInMinutes = parkedTimeToMinutes(vehicle.checkInTime)
+        let hasDiscount = vehicle.discountCard != nil
+        let priceToPay = calculatePriceToPay(parkedTimeInMinutes, vehicleType: vehicle.type, hasDiscount: hasDiscount)
                 
         acumVehicles += 1
         earnings += priceToPay
         
-        return onSuccess(priceToPay)
+        onSuccess(priceToPay)
     }
     
     // Calcular el tiempo de parqueo del vehiculo
@@ -49,7 +49,7 @@ struct Parking {
         // Crear una fecha personalizada para la prueba
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy/MM/dd HH:mm"
-        let someDateTime = formatter.date(from: "2022/09/04 20:31")
+        let someDateTime = formatter.date(from: "2022/09/05 13:31")
         
         // Calculo en minutos del intervalo de tiempo
         let minutesParkedTime = Int((someDateTime!.distance(to: date))/60)
@@ -63,11 +63,13 @@ struct Parking {
         var parkedTimeDivide: Double = 0.0
         
         if parkedTime < 120 {
-            parkedTimeDivide = (Double(parkedTime) / 15.0)
-            price = 5 * Int(parkedTimeDivide)
+            price = vehicleType.fee
+//            parkedTimeDivide = (Double(parkedTime) / 15.0)
+//            price = 5 * Int(parkedTimeDivide)
+        }else {
+            parkedTimeDivide = (Double(parkedTime - 120) / 15.0)
+            price = (5 * Int(parkedTimeDivide)) + vehicleType.fee
         }
-        parkedTimeDivide = (Double(parkedTime - 120) / 15.0)
-        price = (5 * Int(parkedTimeDivide)) + vehicleType.fee
         
         if hasDiscount {
             price = Int(Double(price)*0.85)
@@ -167,6 +169,13 @@ vehicles.forEach {
 
 // Hacer el checkOut de los vehiculos
 alkeParking.checkOutVehicle("AA111HD") { priceToPay in
+    print("\n▫️ Your fee is $\(priceToPay)\n")
+} onError: {
+    print("▫️ Sorry, the check-out failed\n")
+}
+
+// Hacer el checkOut de los vehiculos
+alkeParking.checkOutVehicle("AA156HD") { priceToPay in
     print("\n▫️ Your fee is $\(priceToPay)\n")
 } onError: {
     print("▫️ Sorry, the check-out failed\n")
