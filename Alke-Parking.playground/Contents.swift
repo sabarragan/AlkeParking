@@ -86,6 +86,7 @@ struct Parking {
     // Enlista los vehiculos que hay actualmente en el parqueadero
     func listOfVehicles() {
         print("▫️ The list of plate of vehicles are\n")
+        print("HOLA")
         vehicles.map{print("\($0.plate)")}
     }
     
